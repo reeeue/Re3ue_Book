@@ -13,6 +13,13 @@ class PEParse :
     def __init__(self, file_path) :
         self.file_path = file_path
         self.section_list = []
+
+    """
+    """
+    def print_hex(self, int) :
+        format = "0x" + f"{hex(int)[2:].upper()}"
+
+        return format
     
     """
     """
@@ -34,9 +41,54 @@ class PEParse :
 
         print(f"[ + ] e_magic ( Magic Number ) : {" ".join(f"{byte:02X}" for byte in e_magic)}")
         print(f"  ( ... )")
-        print(f"[ + ] e_lfanew ( NT Header Offset ) : {e_lfanew}")
+        print(f"[ + ] e_lfanew ( NT Header Offset ) : {self.print_hex(e_lfanew)}")
 
         return e_lfanew
+    
+    """
+    """
+    def get_data_directory_name(self, data_directory_index) :
+        data_directory_names = {
+            0 : "Export Directory",
+            1 : "Import Directory",
+            2 : "Resource Directory",
+            3 : "Exception Directory",
+            4 : "Security Directory",
+            5 : "Base Relocation Directory",
+            6 : "Debug Directory",
+            7 : "( * Reserved * ) Archiecture Specific Data",
+            8 : "( * Reserved * ) Global Pointer Register",
+            9 : "TLS Directory",
+            10 : "Load Configuration Directory",
+            11 : "Bound Import Directory",
+            12 : "IAT ( Import Address Table )",
+            13 : "Delay Import Directory",
+            14 : "( .NET ) COM Descriptor Directory",
+            15 : "( * Reserved * )",
+        }
+
+        return data_directory_names.get(data_directory_index)
+    
+    """
+    """
+    def get_data_directory(self, data_directory_index, data_directory_data) :
+        data_directory_name = self.get_data_directory_name(data_directory_index)
+
+        print(f"    [ - ] #{data_directory_index} {data_directory_name}")
+        print(f"        Virtual Address : {self.print_hex(data_directory_data[0])}")
+        print(f"        Size : {self.print_hex(data_directory_data[1])}")
+    
+    """
+    """
+    def get_data_directories(self, data_directory_number, data_directory) :
+        index = 0
+
+        for offset in range(data_directory_number) :
+            data_directory_data = struct.unpack("<II", data_directory[offset*8:(offset+1)*8])
+
+            self.get_data_directory(index, data_directory_data)
+
+            index += 1
 
     """
     """
@@ -62,11 +114,11 @@ class PEParse :
         SizeOfOptionalHeader = file_header_fields[5]
         Characteristics = file_header_data[6]
 
-        print(f"[ + ] Machine : {Machine}")
-        print(f"[ + ] Number of Sections : {NumberOfSections}")
+        print(f"[ + ] Machine : {self.print_hex(Machine)}")
+        print(f"[ + ] Number of Sections : ( Decimal ) {NumberOfSections}")
         print(f"  ( ... )")
-        print(f"[ + ] Size of Optional Header : {SizeOfOptionalHeader}")
-        print(f"[ + ] Characteristics : {Characteristics}")
+        print(f"[ + ] Size of Optional Header : ( Decimal ) {SizeOfOptionalHeader}")
+        print(f"[ + ] Characteristics : {self.print_hex(file_header_data[6])}")
 
         return NumberOfSections, SizeOfOptionalHeader
     
@@ -112,21 +164,23 @@ class PEParse :
 
             return
                 
-        print(f"[ + ] Magic : {Magic}")
+        print(f"[ + ] Magic : {self.print_hex(Magic)}")
         print(f"  ( ... )")
-        print(f"[ + ] AddressOfEntryPoint : {AddressOfEntryPoint}")
+        print(f"[ + ] AddressOfEntryPoint : {self.print_hex(AddressOfEntryPoint)}")
         print(f"  ( ... )")
-        print(f"[ + ] ImageBase : {ImageBase}")
-        print(f"[ + ] SectionAlignment : {SectionAlignment}")
-        print(f"[ + ] FileAlignment : {FileAlignment}")
+        print(f"[ + ] ImageBase : {self.print_hex(ImageBase)}")
+        print(f"[ + ] SectionAlignment : {self.print_hex(SectionAlignment)}")
+        print(f"[ + ] FileAlignment : {self.print_hex(FileAlignment)}")
         print(f"  ( ... )")
-        print(f"[ + ] SizeOfImage : {SizeOfImage}")
-        print(f"[ + ] SizeOfHeaders : {SizeOfHeaders}")
+        print(f"[ + ] SizeOfImage : {self.print_hex(SizeOfImage)}")
+        print(f"[ + ] SizeOfHeaders : {self.print_hex(SizeOfHeaders)}")
         print(f"  ( ... )")
-        print(f"[ + ] Subsystem : {Subsystem}")
+        print(f"[ + ] Subsystem : {self.print_hex(Subsystem)}")
         print(f"  ( ... )")
-        print(f"[ + ] NumberOfRvaAndSizes : {NumberOfRvaAndSizes}")
-        print(f"[ + ] DataDirectory : {DataDirectory}")
+        print(f"[ + ] NumberOfRvaAndSizes : ( Decimal ) {NumberOfRvaAndSizes}")
+        print(f"[ + ] DataDirectory")
+
+        self.get_data_directories(NumberOfRvaAndSizes, DataDirectory)
 
         return
     
@@ -171,11 +225,11 @@ class PEParse :
         Characteristics = section_header_fields[8]
 
         print(f"[ + ] Section Name : {section_name}")
-        print(f"[ + ] VirtualSize : {VirtualSize}")
-        print(f"[ + ] VirtualAddress : {VirtualAddress}")
-        print(f"[ + ] SizeOfRawData : {SizeOfRawData}")
-        print(f"[ + ] PointerToRawData : {PointerToRawData}")
-        print(f"[ + ] Characteristics : {Characteristics}")
+        print(f"[ + ] VirtualSize : {self.print_hex(VirtualSize)}")
+        print(f"[ + ] VirtualAddress : {self.print_hex(VirtualAddress)}")
+        print(f"[ + ] SizeOfRawData : {self.print_hex(SizeOfRawData)}")
+        print(f"[ + ] PointerToRawData : {self.print_hex(PointerToRawData)}")
+        print(f"[ + ] Characteristics : {self.print_hex(Characteristics)}")
     
     """
     """
