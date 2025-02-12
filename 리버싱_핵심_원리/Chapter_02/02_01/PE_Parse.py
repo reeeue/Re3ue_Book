@@ -7,11 +7,14 @@ import struct
 DOS_HEADER_SIGNATURE = b'\x4D\x5A'
 NT_HEADER_SIGNATURE = b'\x50\x45\x00\x00'
 
+"""
+"""
 class PEParse :
     """
     """
     def __init__(self, file_path) :
         self.file_path = file_path
+        self.data_directory_list = []
         self.section_list = []
 
     """
@@ -74,9 +77,14 @@ class PEParse :
     def get_data_directory(self, data_directory_index, data_directory_data) :
         data_directory_name = self.get_data_directory_name(data_directory_index)
 
+        data_directory_rva = data_directory_data[0]
+        data_directory_size = data_directory_data[1]
+
         print(f"    [ - ] #{data_directory_index} {data_directory_name}")
-        print(f"        Virtual Address : {self.print_hex(data_directory_data[0])}")
-        print(f"        Size : {self.print_hex(data_directory_data[1])}")
+        print(f"        Virtual Address : {self.print_hex(data_directory_rva)}")
+        print(f"        Size : {self.print_hex(data_directory_size)}")
+
+        self.data_directory_list.append((data_directory_name, data_directory_rva, data_directory_size))
     
     """
     """
@@ -181,8 +189,6 @@ class PEParse :
         print(f"[ + ] DataDirectory")
 
         self.get_data_directories(NumberOfRvaAndSizes, DataDirectory)
-
-        return
     
     """
     """
@@ -230,6 +236,8 @@ class PEParse :
         print(f"[ + ] SizeOfRawData : {self.print_hex(SizeOfRawData)}")
         print(f"[ + ] PointerToRawData : {self.print_hex(PointerToRawData)}")
         print(f"[ + ] Characteristics : {self.print_hex(Characteristics)}")
+
+        self.section_list.append((section_name, VirtualSize, VirtualAddress, SizeOfRawData, PointerToRawData, Characteristics))
     
     """
     """
@@ -237,8 +245,6 @@ class PEParse :
         print("\n# Section Headers")
 
         print("\n========================================")
-
-        section_list = []
 
         for index in range(NumberOfSections) :
             f.seek(section_headers_offset + 40 * index)
@@ -267,7 +273,7 @@ class PEParse :
 if __name__ == "__main__" :
     # How to Use
     if len(sys.argv) != 2 :
-        print("How to Use : python PEParse.py < PE File Path >")
+        print("How to Use : python PE_Parse.py < PE File Path >")
         sys.exit(1)
     
     pe_file = sys.argv[1]
